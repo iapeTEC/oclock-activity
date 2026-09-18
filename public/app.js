@@ -248,7 +248,8 @@ let salvandoTimer = null;
 function marcarSalvo(ok) {
   const el = $('salvo');
   if (!el) return;
-  el.textContent = ok ? '\u2714 progresso salvo na planilha da professora'
+  const onde = (window.CONFIG && window.CONFIG.API) ? 'na planilha' : 'no computador';
+  el.textContent = ok ? '\u2714 progresso salvo ' + onde + ' da professora'
                       : '\u26a0 n\u00e3o consegui salvar agora \u2014 avise a professora';
   el.style.color = ok ? '' : '#d2453c';
 }

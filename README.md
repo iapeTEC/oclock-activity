@@ -1,9 +1,16 @@
 # O'clock Activity — half past / quarter past / quarter to
 
 Circuito de provas de **horas em inglês** para o 4º ano do ensino fundamental.
-Roda no computador da professora e os alunos acessam pelo navegador, na rede local
-da escola. Sem internet, sem nuvem, sem conta: o progresso é salvo automaticamente
-em arquivo na máquina da professora.
+
+**No ar:** <https://iapetec.github.io/oclock-activity/>
+(painel da professora: <https://iapetec.github.io/oclock-activity/painel.html>)
+
+As telas ficam no GitHub Pages e a **pontuação dos alunos vai para uma planilha do
+Google Sheets**, por um web app do Apps Script. O aluno só digita o nome — não
+precisa de conta Google nem de instalar nada.
+
+O mesmo código continua rodando **offline** na rede da escola (`node server.js`),
+para o caso de a internet cair: basta deixar `API` vazio em `public/config.js`.
 
 Feito para aulas em que os alunos estudam as três formas de dizer as horas:
 
@@ -15,7 +22,21 @@ Feito para aulas em que os alunos estudam as três formas de dizer as horas:
 
 ---
 
-## Como usar
+## Como usar na aula (online)
+
+1. A professora manda o endereço para os alunos:
+   **<https://iapetec.github.io/oclock-activity/>**
+2. Abre o **painel** em <https://iapetec.github.io/oclock-activity/painel.html>
+   e digita a senha do painel para acompanhar a turma ao vivo.
+3. As notas caem na planilha do Google Sheets da conta que publicou o Apps Script
+   (o botão *"Abrir a planilha"* no painel leva direto nela).
+
+---
+
+## Como usar offline (rede local da escola)
+
+Antes, deixe `API: ''` em `public/config.js` — assim o site salva no próprio
+computador, sem internet.
 
 **Pré-requisito:** [Node.js](https://nodejs.org) instalado (versão 18 ou mais nova).
 Não há nenhuma dependência para instalar — o servidor usa só a biblioteca padrão.
@@ -91,76 +112,116 @@ forma correta.
 
 ## Salvamento automático
 
-O progresso vai para o servidor **a cada resposta**, **a cada 30 segundos** e no
-momento em que a aba é fechada (`pagehide` / `visibilitychange` com
-`navigator.sendBeacon`). Há ainda uma cópia em `localStorage` como reserva.
+O progresso é enviado **a cada resposta**, **a cada 30 segundos** e no momento em
+que a aba é fechada (`pagehide` / `visibilitychange` com `navigator.sendBeacon`).
+Há ainda uma cópia em `localStorage` como reserva.
 
-Cada aluno vira um arquivo em `resultados/<nome-do-aluno>.json`, gravado de forma
-atômica (escreve `.tmp` e renomeia). Se o aluno fechar sem querer ou faltar
-energia, basta digitar o mesmo nome: o site oferece continuar de onde parou,
-**com as mesmas perguntas sorteadas**.
+Se o aluno fechar sem querer ou faltar energia, basta digitar o mesmo nome: o site
+oferece continuar de onde parou, **com as mesmas perguntas sorteadas**.
+
+No modo online, cada aluno vira uma linha na planilha; no modo offline, um arquivo
+`resultados/<nome-do-aluno>.json` gravado de forma atômica (escreve `.tmp` e
+renomeia).
 
 > Os arquivos de `resultados/` estão no `.gitignore`: nomes e notas de crianças
 > não devem ir para o GitHub.
 
-### Painel da professora — `/painel`
+### Painel da professora — `painel.html`
 
 Tabela com todos os alunos, a fase em que estão, acertos por fase, total, tempo e
-última atualização. Atualiza sozinho a cada 15 segundos e exporta tudo em CSV
-(com BOM, para o Excel abrir os acentos corretamente).
+última atualização. Atualiza sozinho a cada 20 segundos, exporta tudo em CSV
+(com BOM, para o Excel abrir os acentos corretamente) e tem link para a planilha.
+
+O painel é público como qualquer página do Pages, mas **só mostra dados depois da
+senha do painel**, que fica guardada no Apps Script (propriedade `SENHA_PAINEL`) e
+nunca no código do site. A senha digitada fica no `localStorage` do navegador da
+professora; o botão *"Sair"* apaga.
 
 ---
 
 ## Estrutura
 
 ```
-server.js            servidor HTTP, sem dependências (~200 linhas)
-public/index.html    telas do aluno: nome, prova, fim de fase, resultado
-public/app.js        relógios em SVG, geração das 4 fases, correção, salvamento
-public/painel.html   painel da professora
-public/styles.css    estilo
-resultados/          um .json por aluno (fora do controle de versão)
-INICIAR PROVA.bat    atalho de duplo clique no Windows
-LEIA-ME.txt          guia em português para a professora, sem termos técnicos
+public/index.html        telas do aluno: nome, prova, fim de fase, resultado
+public/app.js            relógios em SVG, as 4 fases, correção, salvamento
+public/painel.html       painel da professora
+public/config.js         endereço do web app (vazio = servidor local)
+public/styles.css        estilo
+apps-script/Code.gs      backend: grava e lê a planilha do Google Sheets
+apps-script/appsscript.json  manifesto (escopo do Sheets + web app anônimo)
+.github/workflows/pages.yml  publica public/ no Pages a cada push na main
+server.js                servidor HTTP do modo offline, sem dependências
+resultados/              um .json por aluno no modo offline (fora do git)
+INICIAR PROVA.bat        atalho de duplo clique no Windows
+LEIA-ME.txt              guia em português para a professora, sem termos técnicos
 ```
 
-### Endpoints
+### A API (a mesma no web app e no servidor local)
 
-| Método | Rota | O que faz |
+| Método | Chamada | O que faz |
 |---|---|---|
-| `GET` | `/api/progresso?nome=` | Devolve o progresso salvo do aluno |
-| `POST` | `/api/progresso` | Grava o progresso (corpo JSON com `nome`) |
-| `GET` | `/api/turma` | Resumo de todos os alunos, para o painel |
-| `GET` | `/api/turma.csv` | Mesma tabela em CSV para o Excel |
+| `GET` | `?acao=ping` | Diz se o backend está no ar |
+| `GET` | `?acao=progresso&nome=` | Devolve o progresso salvo do aluno |
+| `POST` | corpo = estado em JSON | Grava o progresso (precisa de `nome`) |
+| `GET` | `?acao=turma&chave=senha` | Resumo da turma + link da planilha (painel) |
 
-O nome do aluno vira nome de arquivo por um *slug* sem acentos
-(`Ana Júlia Gonçalves` → `ana-julia-goncalves.json`). Nomes que resultam no mesmo
-slug compartilham o arquivo — em uma turma com dois alunos de nome muito parecido,
+O `POST` vai com `Content-Type: text/plain` de propósito: com
+`application/json` o navegador manda antes um pedido de permissão (*preflight*
+`OPTIONS`) que o Apps Script não responde. O conteúdo continua sendo JSON.
+
+O nome do aluno vira um *id* por um *slug* sem acentos
+(`Ana Júlia Gonçalves` → `ana-julia-goncalves`). Nomes que resultam no mesmo
+slug compartilham a linha — em uma turma com dois alunos de nome muito parecido,
 peça o sobrenome.
 
 ---
 
-## Para colocar online
+## Como está publicado
 
-⚠️ **Atenção antes de publicar:** hoje quem guarda as notas é o servidor Node
-rodando na máquina da professora. Num site estático (GitHub Pages, Netlify,
-Vercel estático) **as rotas `/api/*` não existem** — o aluno consegue fazer a
-prova, mas nada é salvo e o painel fica vazio.
+**Telas — GitHub Pages.** O workflow `.github/workflows/pages.yml` sobe a pasta
+`public/` a cada push na `main`. Nada de build, nada de dependência.
 
-Caminhos possíveis:
+**Notas — Google Sheets por Apps Script.** O código do backend está em
+`apps-script/`. Ele mesmo cria a planilha na primeira execução e guarda o id na
+propriedade `PLANILHA_ID` do script, com três abas:
 
-1. **Hospedar o servidor como está** (Render, Railway, Fly.io, uma VM).
-   Funciona sem mudar o código, mas o disco desses serviços costuma ser efêmero:
-   os `.json` somem no próximo *deploy*. Vale trocar a gravação em arquivo por um
-   banco de verdade (SQLite com volume, Postgres, Firestore).
-2. **Versão estática** (GitHub Pages): trocar as chamadas `fetch('/api/...')` em
-   `public/app.js` por `localStorage`, e no fim da prova gerar um arquivo/código
-   que o aluno entrega à professora. Some o painel ao vivo.
-3. **Estático + backend gerenciado**: manter as telas no Pages e mandar o
-   progresso para um Firebase/Supabase. É o que preserva o painel ao vivo.
+| Aba | O que tem |
+|---|---|
+| `Alunos` | uma linha por aluno: fase, acertos por fase, total, %, tempo |
+| `Progresso` | o estado completo da prova em JSON, para o aluno retomar |
+| `Respostas` | uma linha por questão (relógio, o que respondeu, o certo) |
 
-Em qualquer caminho online, lembre que os dados são **nomes de crianças**:
-o acesso precisa ser restrito à professora.
+A gravação é serializada por `LockService`, então a turma inteira pode salvar ao
+mesmo tempo sem misturar linhas.
+
+### Publicar uma mudança no backend
+
+```bash
+cd apps-script
+clasp push --force
+clasp deploy --deploymentId <id-do-deploy> --description "o que mudou"
+```
+
+Reaproveitar o **mesmo** `--deploymentId` é o que mantém o endereço do web app
+(e o `public/config.js`) valendo. O deploy é *Executar como eu* + *Qualquer
+pessoa, mesmo anônima* — é o que permite o aluno salvar sem conta Google.
+
+> Na primeira vez (e sempre que mudar o `oauthScopes`), o dono do script precisa
+> abrir o editor e rodar `preparar()` uma vez para autorizar o acesso à planilha.
+> Sem isso, o web app responde *Acesso negado* para todo mundo.
+
+### Trocar a senha do painel
+
+No editor do Apps Script: **Configurações do projeto → Propriedades do script →
+`SENHA_PAINEL`**. Vale na hora, sem novo deploy, e o site não precisa mudar.
+
+### Privacidade
+
+Os dados são **nomes de crianças**. O que está exposto e o que não está:
+
+- a prova é aberta (qualquer um pode responder e criar uma linha na planilha);
+- a lista da turma só sai com a senha do painel;
+- a planilha fica na conta Google da escola, com o compartilhamento que ela tiver.
 
 ---
 

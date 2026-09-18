@@ -3,22 +3,32 @@
   half past  /  quarter past  /  quarter to
 ==========================================================
 
-COMO COMECAR A AULA
--------------------
-1. De dois cliques no arquivo "INICIAR PROVA.bat".
-   Abre uma janela preta (o servidor) e o painel no navegador.
-   DEIXE A JANELA PRETA ABERTA ate o fim da aula.
+COMO COMECAR A AULA  (pela internet)
+------------------------------------
+1. Passe este endereco para os alunos:
 
-2. A janela preta mostra dois enderecos, por exemplo:
+      https://iapetec.github.io/oclock-activity/
 
-      Neste computador:   http://localhost:8080
-      Para os alunos:     http://192.168.0.15:8080
+   Funciona em celular, tablet ou computador, em qualquer internet.
+   O aluno nao precisa de conta Google nem instalar nada.
 
-   O segundo e o que os alunos digitam no navegador
-   (celular, tablet ou outro computador ligado no MESMO wi-fi).
-   Se os alunos usarem ESTE computador, use o primeiro endereco.
+2. Abra o SEU painel para acompanhar a turma ao vivo:
 
-3. No fim da aula, feche a janela preta (ou aperte Ctrl + C).
+      https://iapetec.github.io/oclock-activity/painel.html
+
+   Ele pede a senha do painel (a mesma sempre, guardada nesse
+   navegador). Enquanto os alunos respondem, a tabela vai enchendo.
+
+3. Nao precisa fechar nada no fim da aula. As notas ja estao
+   salvas na sua planilha do Google.
+
+SE A INTERNET DA ESCOLA CAIR
+----------------------------
+Da para rodar a prova na rede local, como antes: de dois cliques em
+"INICIAR PROVA.bat" e use o endereco com IP que aparece na janela
+preta. Nesse modo as notas ficam na pasta "resultados" deste
+computador, e nao na planilha (o tecnico precisa deixar o campo API
+vazio no arquivo public/config.js).
 
 
 COMO E A PROVA
@@ -44,33 +54,46 @@ So nao aceita a palavra escrita errada - e ai mostra a forma certa.
 
 ONDE FICAM AS NOTAS
 -------------------
-Pasta "resultados", um arquivo .json por aluno, com o nome dele.
+Numa planilha do Google Sheets, na conta da escola. No painel, o
+botao "Abrir a planilha" leva direto nela. Sao tres abas:
+
+  Alunos      uma linha por aluno: fase, acertos de cada fase,
+              total, porcentagem e tempo
+  Progresso   o "rascunho" da prova (nao precisa mexer)
+  Respostas   questao por questao: o relogio, o que o aluno
+              respondeu e qual era o certo
+
 O progresso e salvo sozinho: a cada resposta, a cada 30 segundos e
 na hora em que o aluno fecha a aba. Se cair a energia ou o aluno
 fechar sem querer, ele digita o mesmo nome e o site pergunta se
 quer continuar de onde parou - com as mesmas perguntas.
 
-Painel da professora:  http://localhost:8080/painel
+O painel:
   - lista todos os alunos, a fase em que estao e os acertos
-  - atualiza sozinho a cada 15 segundos (da para acompanhar ao vivo)
-  - botao "Baixar planilha (CSV)" abre no Excel com tudo
+  - atualiza sozinho a cada 20 segundos (da para acompanhar ao vivo)
+  - botao "Baixar CSV" abre no Excel com tudo
+  - botao "Sair" esquece a senha nesse navegador
 
-Para zerar tudo antes de outra turma: apague os arquivos da pasta
-"resultados". Se um aluno so precisa refazer, apague o arquivo dele
-(ou peca para ele clicar em "Comecar tudo de novo").
+Para zerar tudo antes de outra turma: na planilha, apague as linhas
+das abas Alunos, Progresso e Respostas (deixe a primeira linha, a
+dos titulos). Se um aluno so precisa refazer, peca para ele clicar
+em "Comecar tudo de novo" na tela do nome.
 
 
 PROBLEMAS COMUNS
 ----------------
-"A porta 8080 ja esta em uso"
-   Ja tem uma janela do servidor aberta. Use ela, ou feche e
-   comece de novo.
+O aluno ve "nao consegui salvar agora"
+   E a internet dele. A prova continua funcionando; quando a
+   conexao voltar, o proximo salvamento manda tudo de uma vez.
+   O aparelho tambem guarda uma copia por seguranca.
 
-Os alunos nao conseguem abrir o endereco
-   - Precisam estar no mesmo wi-fi que este computador.
-   - Na primeira vez, o Windows pode perguntar se libera o acesso
-     do Node.js na rede: escolha "Permitir" (rede privada).
+O painel diz "senha do painel incorreta"
+   Clique em Sair e digite de novo. A senha nao fica escrita no
+   site: ela mora no Apps Script.
 
 Um aluno digitou o nome errado
-   Renomeie o arquivo dele dentro da pasta "resultados", ou peca
-   para refazer com o nome certo.
+   Peca para refazer com o nome certo (vira outra linha) e apague a
+   linha errada na planilha.
+
+Dois alunos com nomes muito parecidos caem na mesma linha
+   Peca o nome completo com sobrenome.
