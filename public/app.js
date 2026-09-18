@@ -235,6 +235,18 @@ function novoEstado(nome, turma) {
    POST corpo = estado em JSON     ->  { ok: true }                            */
 var API = (window.CONFIG && window.CONFIG.API) || '/api';
 
+/* Rede de escola as vezes pendura a conexao sem erro nenhum. Toda chamada
+   tem tempo limite para o aluno nunca ficar esperando para sempre.        */
+function comLimite(promessa, segundos) {
+  return new Promise(function (resolve, reject) {
+    var caiu = setTimeout(function () { reject(new Error('demorou demais')); }, segundos * 1000);
+    promessa.then(
+      function (v) { clearTimeout(caiu); resolve(v); },
+      function (e) { clearTimeout(caiu); reject(e); }
+    );
+  });
+}
+
 function urlApi(parametros) {
   var partes = [];
   Object.keys(parametros).forEach(function (k) {
@@ -269,7 +281,10 @@ function salvar() {
   estado.atualizado = new Date().toISOString();
   try { localStorage.setItem('prova-relogios', JSON.stringify(estado)); } catch (e) {}
 
+  var encerrado = false;
   function acabou(ok) {
+    if (encerrado) return;
+    encerrado = true;
     marcarSalvo(ok);
     salvandoAgora = false;
     if (salvarDeNovo) { salvarDeNovo = false; salvar(); }
@@ -277,20 +292,19 @@ function salvar() {
 
   /* text/plain de proposito: evita o pedido de permissao (preflight) que o
      Apps Script nao responde. O conteudo continua sendo JSON.              */
-  return fetch(API, {
+  return comLimite(fetch(API, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(estado),
     redirect: 'follow'
-  })
-    .then(function (r) { return r.ok ? r.json() : { erro: 'http ' + r.status }; })
+  }).then(function (r) { return r.ok ? r.json() : { erro: 'http ' + r.status }; }), 20)
     .then(function (d) { acabou(!!(d && d.ok)); })
     .catch(function () { acabou(false); });
 }
 
 function salvarEmBreve() {
   clearTimeout(salvandoTimer);
-  salvandoTimer = setTimeout(salvar, 300);
+  salvandoTimer = setTimeout(salvar, 1500);
 }
 
 /* salva na hora em que a aba e fechada / trocada / o computador e desligado */
@@ -334,8 +348,8 @@ $('form-nome').addEventListener('submit', (ev) => {
   }
   $('aviso-nome').hidden = true;
 
-  fetch(urlApi({ acao: 'progresso', nome: nome }), { redirect: 'follow' })
-    .then((r) => r.json())
+  comLimite(fetch(urlApi({ acao: 'progresso', nome: nome }), { redirect: 'follow' })
+    .then((r) => r.json()), 15)
     .then((dados) => {
       if (dados.encontrado && dados.progresso && dados.progresso.perguntas) {
         pendente = dados.progresso;
@@ -608,7 +622,9 @@ function proximaPergunta() {
   estado.indice++;
   const total = estado.perguntas[FASES[estado.fase].chave].length;
   if (estado.indice >= total) { terminarFase(); } else { renderizar(); }
-  salvar();
+  /* nao salva aqui: a resposta acabou de ser salva em registrar(), e o fim da
+     fase salva por conta propria. Menos ida ao backend = turma inteira
+     salvando junto sem estourar a cota do Apps Script.                     */
 }
 
 function terminarFase() {
@@ -661,7 +677,8 @@ function mostrarFim() {
     : '<div class="sem-erros">Você não errou nenhuma! Congratulations! 🎉</div>';
 
   mostrarTela('tela-fim');
-  salvar();
+  /* quem chega aqui acabou de salvar: terminarFase() ao concluir, ou o
+     "continuar" de uma prova ja terminada                                  */
 }
 
 /* nome já digitado antes neste computador: adianta o preenchimento */

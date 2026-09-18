@@ -48,12 +48,16 @@ function responder(obj) {
 
 /* ------------------------------------------------------------ planilha ---- */
 
+var ABERTA = null;   // planilha da execucao atual (abrir custa tempo de cota)
+
 function planilha() {
+  if (ABERTA) return ABERTA;
   var id = props().getProperty('PLANILHA_ID');
   if (id) {
-    try { return SpreadsheetApp.openById(id); } catch (e) { /* recria abaixo */ }
+    try { ABERTA = SpreadsheetApp.openById(id); return ABERTA; } catch (e) { /* recria abaixo */ }
   }
   var nova = SpreadsheetApp.create('Prova de Horas em Ingles — 4o ano (resultados)');
+  ABERTA = nova;
   props().setProperty('PLANILHA_ID', nova.getId());
   var primeira = nova.getSheets()[0];
   primeira.setName(ABA_ALUNOS);
@@ -149,7 +153,7 @@ function salvarProgresso(p) {
 
   var id    = idDe(p.nome);
   var trava = LockService.getScriptLock();
-  trava.waitLock(25000);
+  trava.waitLock(15000);
   try {
     var prog = aba(ABA_PROGRESSO, CAB_PROGRESSO);
     var alun = aba(ABA_ALUNOS, CAB_ALUNOS);
