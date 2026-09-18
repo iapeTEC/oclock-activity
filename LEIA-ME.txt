@@ -74,10 +74,10 @@ O painel:
   - botao "Baixar CSV" abre no Excel com tudo
   - botao "Sair" esquece a senha nesse navegador
 
-Para zerar tudo antes de outra turma: na planilha, apague as linhas
-das abas Alunos, Progresso e Respostas (deixe a primeira linha, a
-dos titulos). Se um aluno so precisa refazer, peca para ele clicar
-em "Comecar tudo de novo" na tela do nome.
+Para zerar tudo antes de outra turma: no painel, botao "Zerar tudo"
+(ele pergunta antes; BAIXE O CSV primeiro, nao tem como desfazer).
+Se um aluno so precisa refazer, peca para ele clicar em "Comecar
+tudo de novo" na tela do nome.
 
 
 PROBLEMAS COMUNS

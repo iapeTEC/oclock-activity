@@ -255,6 +255,29 @@ function relogioDe(tipo, h) {
   return '';
 }
 
+/* ------------------------------------------------------------- zerar ------ */
+/* Apaga os dados das tres abas e deixa so a linha dos titulos. Usado entre
+   uma turma e outra. Pede a senha do painel e so aceita por POST.          */
+function limparTudo() {
+  var trava = LockService.getScriptLock();
+  trava.waitLock(15000);
+  try {
+    var apagadas = 0;
+    var abas = [[ABA_ALUNOS, CAB_ALUNOS], [ABA_PROGRESSO, CAB_PROGRESSO], [ABA_RESPOSTAS, CAB_RESPOSTAS]];
+    for (var i = 0; i < abas.length; i++) {
+      var a = aba(abas[i][0], abas[i][1]);
+      var ultima = a.getLastRow();
+      if (ultima > 1) {
+        apagadas += ultima - 1;
+        a.deleteRows(2, ultima - 1);
+      }
+    }
+    return { ok: true, linhasApagadas: apagadas };
+  } finally {
+    trava.releaseLock();
+  }
+}
+
 /* ------------------------------------------------------------------ ler --- */
 
 function lerProgresso(nome) {
@@ -329,6 +352,14 @@ function doPost(e) {
     if (e && e.postData && e.postData.contents) corpo = JSON.parse(e.postData.contents);
     else if (e && e.parameter && e.parameter.dados) corpo = JSON.parse(e.parameter.dados);
     if (!corpo) return responder({ erro: 'corpo vazio' });
+
+    if (corpo.acao === 'limpar') {
+      if (texto(corpo.chave) !== senhaPainel()) {
+        return responder({ erro: 'senha do painel incorreta' });
+      }
+      return responder(limparTudo());
+    }
+
     return responder(salvarProgresso(corpo));
   } catch (erro) {
     return responder({ erro: String(erro && erro.message || erro) });

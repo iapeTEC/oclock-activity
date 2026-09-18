@@ -41,6 +41,7 @@
       <button class="botao secundario" id="btn-csv" type="button">⬇ Baixar CSV</button>
       <a class="botao secundario" id="link-planilha" href="#" target="_blank" rel="noopener"
          style="text-decoration:none" hidden>📊 Abrir a planilha</a>
+      <button class="botao secundario" id="btn-zerar" type="button">🗑 Zerar tudo</button>
       <button class="botao secundario" id="btn-sair" type="button">Sair</button>
       <span id="carimbo" style="font-size:13px;color:var(--texto-suave)"></span>
     </div>
@@ -150,6 +151,22 @@ $('form-senha').addEventListener('submit',function(ev){
 });
 $('btn-atualizar').addEventListener('click',carregar);
 $('btn-csv').addEventListener('click',baixarCsv);
+$('btn-zerar').addEventListener('click',function(){
+  var quantos = ultimos.length;
+  if(!confirm('Isso apaga TODOS os '+quantos+' alunos da planilha (as abas Alunos, '+
+     'Progresso e Respostas) e nao tem como desfazer.\n\nBaixe o CSV antes, se ainda precisar das notas.\n\nApagar mesmo?')) return;
+  $('carimbo').textContent='apagando...';
+  fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+             body:JSON.stringify({acao:'limpar',chave:senha}),redirect:'follow'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.erro){ $('carimbo').textContent='nao deu: '+d.erro; return; }
+      ultimos=[];
+      $('carimbo').textContent=(d.linhasApagadas||0)+' linhas apagadas';
+      carregar();
+    })
+    .catch(function(){ $('carimbo').textContent='nao consegui falar com a planilha'; });
+});
 $('btn-sair').addEventListener('click',function(){ sair(''); });
 
 var guardada='';

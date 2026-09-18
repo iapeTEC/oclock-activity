@@ -22,6 +22,7 @@ function criarAba(nome) {
     setFrozenRows: () => aba,
     setName: (n) => { nome = n; return aba; },
     deleteRow: (linha) => { celulas.splice(linha - 1, 1); return aba; },
+    deleteRows: (linha, quantas) => { celulas.splice(linha - 1, quantas); return aba; },
     appendRow: (valores) => { celulas.push(valores.slice()); return aba; },
     getDataRange: () => aba.getRange(1, 1, Math.max(celulas.length, 1), 26),
     getRange: (linha, coluna, nLinhas = 1, nColunas = 1) => ({
@@ -174,6 +175,14 @@ conferir('planilha zerou para a prova nova',
 const alunos = planilha.getSheetByName('Alunos');
 conferir('aba Alunos tem 1 aluno', alunos.getLastRow(), 2);
 conferir('aproveitamento zerado depois de refazer', alunos.getRange(2, 11).getValue(), '0%');
+
+conferir('zerar pede senha', !!post({ acao: 'limpar', chave: 'errada' }).erro, true);
+const zerou = post({ acao: 'limpar', chave: 'iape2026' });
+conferir('zerar apaga as linhas', zerou.ok, true);
+conferir('turma fica vazia', get({ acao: 'turma', chave: 'iape2026' }).alunos.length, 0);
+conferir('aba Respostas fica so com o cabecalho', respostasAba.getLastRow(), 1);
+conferir('aluno zerado volta a nao ter progresso',
+  get({ acao: 'progresso', nome: 'Ana Júlia Gonçalves' }).encontrado, false);
 
 console.log(falhas ? '\n' + falhas + ' teste(s) falharam\n' : '\ntodos os testes passaram\n');
 process.exit(falhas ? 1 : 0);

@@ -164,6 +164,7 @@ LEIA-ME.txt              guia em português para a professora, sem termos técni
 | `GET` | `?acao=progresso&nome=` | Devolve o progresso salvo do aluno |
 | `POST` | corpo = estado em JSON | Grava o progresso (precisa de `nome`) |
 | `GET` | `?acao=turma&chave=senha` | Resumo da turma + link da planilha (painel) |
+| `POST` | `{"acao":"limpar","chave":"senha"}` | Zera as tres abas (só pelo painel, com confirmação) |
 
 O `POST` vai com `Content-Type: text/plain` de propósito: com
 `application/json` o navegador manda antes um pedido de permissão (*preflight*
@@ -209,6 +210,11 @@ pessoa, mesmo anônima* — é o que permite o aluno salvar sem conta Google.
 > Na primeira vez (e sempre que mudar o `oauthScopes`), o dono do script precisa
 > abrir o editor e rodar `preparar()` uma vez para autorizar o acesso à planilha.
 > Sem isso, o web app responde *Acesso negado* para todo mundo.
+
+### Zerar entre turmas
+
+Botão **"Zerar tudo"** no painel: pede confirmação e apaga as linhas das três
+abas, deixando os títulos. Não tem desfazer — o CSV do painel é o backup.
 
 ### Trocar a senha do painel
 
