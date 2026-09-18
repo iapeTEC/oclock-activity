@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What time is it? — 4º ano</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕐</text></svg>">
+</head>
+<body>
+
+<!-- ============ TELA 1: NOME (obrigatório) ============ -->
+<section id="tela-inicio" class="tela ativa">
+  <div class="cartao cartao-inicio">
+    <div class="relogio-capa" id="relogio-capa"></div>
+    <h1>What time is it?</h1>
+    <p class="sub">half past &nbsp;•&nbsp; quarter past &nbsp;•&nbsp; quarter to</p>
+
+    <form id="form-nome" autocomplete="off">
+      <label for="campo-nome">Escreva o seu nome completo <span class="obrigatorio">*</span></label>
+      <input id="campo-nome" name="nome" type="text" placeholder="Ex.: Maria Clara Souza" required
+             maxlength="60" autocapitalize="words" spellcheck="false">
+
+      <label for="campo-turma">Turma <span class="opcional">(se a professora pedir)</span></label>
+      <input id="campo-turma" name="turma" type="text" placeholder="Ex.: 4º ano B" maxlength="30">
+
+      <p class="aviso" id="aviso-nome" hidden>Você precisa escrever o seu nome para começar.</p>
+      <button class="botao grande" type="submit">Começar a prova →</button>
+    </form>
+
+    <div id="caixa-retomar" class="retomar" hidden>
+      <p id="texto-retomar"></p>
+      <div class="linha-botoes">
+        <button class="botao" id="btn-continuar" type="button">Continuar de onde parei</button>
+        <button class="botao secundario" id="btn-recomecar" type="button">Começar tudo de novo</button>
+      </div>
+    </div>
+
+    <p class="rodape-inicio">O seu progresso é salvo sozinho no computador da professora.</p>
+  </div>
+</section>
+
+<!-- ============ TELA 2: PROVA ============ -->
+<section id="tela-jogo" class="tela">
+  <header class="topo">
+    <div class="topo-esq">
+      <span class="etiqueta-fase" id="etiqueta-fase">Fase 1</span>
+      <span class="titulo-fase" id="titulo-fase"></span>
+    </div>
+    <div class="topo-dir">
+      <span class="placar" id="placar">0 acertos</span>
+      <button class="botao-icone" id="btn-som" type="button" title="Ligar/desligar som">🔊</button>
+    </div>
+  </header>
+
+  <div class="barra"><div class="barra-cheia" id="barra-cheia"></div></div>
+  <p class="contador" id="contador">Pergunta 1 de 12</p>
+
+  <main class="cartao cartao-jogo">
+    <p class="enunciado" id="enunciado"></p>
+    <div class="palco-relogio" id="palco-relogio"></div>
+    <div id="area-resposta"></div>
+    <div class="feedback" id="feedback" hidden></div>
+  </main>
+
+  <footer class="rodape-jogo">
+    <button class="botao grande" id="btn-principal" type="button"></button>
+    <span class="salvo" id="salvo"></span>
+  </footer>
+</section>
+
+<!-- ============ TELA 3: FIM DE FASE ============ -->
+<section id="tela-intervalo" class="tela">
+  <div class="cartao cartao-intervalo">
+    <div class="selo" id="selo-intervalo">⭐</div>
+    <h2 id="titulo-intervalo"></h2>
+    <p class="nota-fase" id="nota-intervalo"></p>
+    <p class="proxima" id="proxima-intervalo"></p>
+    <button class="botao grande" id="btn-proxima-fase" type="button">Continuar →</button>
+  </div>
+</section>
+
+<!-- ============ TELA 4: RESULTADO FINAL ============ -->
+<section id="tela-fim" class="tela">
+  <div class="cartao cartao-fim">
+    <div class="selo" id="selo-fim">🏆</div>
+    <h2>Well done, <span id="nome-fim"></span>!</h2>
+    <p class="nota-final" id="nota-final"></p>
+
+    <div class="grade-fases" id="grade-fases"></div>
+
+    <h3 class="titulo-revisao">Para estudar em casa</h3>
+    <div id="lista-erros" class="lista-erros"></div>
+
+    <p class="rodape-fim">A sua prova já foi salva no computador da professora. ✔</p>
+    <button class="botao secundario" id="btn-sair" type="button">Sair</button>
+  </div>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>

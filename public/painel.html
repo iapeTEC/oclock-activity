@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel da professora — What time is it?</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .painel{max-width:1100px;margin:0 auto}
+  .painel h1{font-size:24px;margin:0 0 4px}
+  .painel .sub{text-align:left;margin-bottom:18px}
+  .acoes{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+  .acoes .botao{font-size:15px;padding:10px 16px}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;box-shadow:var(--sombra)}
+  th,td{padding:10px 12px;text-align:left;font-size:14px;border-bottom:1px solid var(--borda)}
+  th{background:#f2f7fd;font-size:12px;text-transform:uppercase;letter-spacing:.3px;color:var(--texto-suave)}
+  td.nome{font-weight:700}
+  .tag{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:800}
+  .tag.ok{background:var(--verde-claro);color:#146c45}
+  .tag.andando{background:#fff3da;color:#8a5f0d}
+  .nota{font-weight:800}
+  .vazio{background:#fff;border-radius:14px;padding:30px;text-align:center;color:var(--texto-suave);font-weight:600;box-shadow:var(--sombra)}
+  .legenda{font-size:13px;color:var(--texto-suave);margin-top:14px}
+</style>
+</head>
+<body>
+<section class="tela ativa">
+  <div class="painel">
+    <h1>Painel da professora</h1>
+    <p class="sub">Resultados salvos nesta máquina, na pasta <b>resultados</b>.</p>
+
+    <div class="acoes">
+      <button class="botao" id="btn-atualizar" type="button">↻ Atualizar</button>
+      <a class="botao secundario" href="/api/turma.csv" style="text-decoration:none">⬇ Baixar planilha (CSV)</a>
+      <span id="carimbo" style="font-size:13px;color:var(--texto-suave)"></span>
+    </div>
+
+    <div id="conteudo"></div>
+    <p class="legenda">Atualiza sozinho a cada 15 segundos. Cada fase mostra <b>acertos / respondidas</b>.</p>
+  </div>
+</section>
+
+<script>
+function escapar(t){return String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function hora(iso){ if(!iso) return '—'; const d=new Date(iso);
+  return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function celula(f){ return f.feitas ? f.certas+' / '+f.feitas : '—'; }
+
+function carregar(){
+  fetch('/api/turma').then(r=>r.json()).then(d=>{
+    const alunos=d.alunos||[];
+    document.getElementById('carimbo').textContent='última leitura: '+new Date().toLocaleTimeString('pt-BR');
+    if(!alunos.length){
+      document.getElementById('conteudo').innerHTML='<div class="vazio">Nenhum aluno começou a prova ainda.</div>';
+      return;
+    }
+    const linhas=alunos.map(a=>{
+      const pct=a.totalQuestoes?Math.round(a.total/a.totalQuestoes*100):0;
+      return '<tr>'+
+        '<td class="nome">'+escapar(a.nome)+'</td>'+
+        '<td>'+escapar(a.turma)+'</td>'+
+        '<td>'+(a.concluido?'<span class="tag ok">terminou</span>':'<span class="tag andando">fase '+escapar(a.faseAtual)+'</span>')+'</td>'+
+        '<td>'+celula(a.f1)+'</td><td>'+celula(a.f2)+'</td><td>'+celula(a.f3)+'</td><td>'+celula(a.f4)+'</td>'+
+        '<td class="nota">'+a.total+' / '+a.totalQuestoes+(a.concluido?' ('+pct+'%)':'')+'</td>'+
+        '<td>'+a.tempoMin+' min</td>'+
+        '<td>'+hora(a.atualizado)+'</td>'+
+      '</tr>';
+    }).join('');
+    document.getElementById('conteudo').innerHTML=
+      '<table><thead><tr><th>Aluno</th><th>Turma</th><th>Situação</th>'+
+      '<th>Fase 1<br>escolher</th><th>Fase 2<br>montar</th><th>Fase 3<br>escrever</th><th>Fase 4<br>checar</th>'+
+      '<th>Total</th><th>Tempo</th><th>Atualizado</th></tr></thead><tbody>'+linhas+'</tbody></table>';
+  }).catch(()=>{
+    document.getElementById('conteudo').innerHTML='<div class="vazio">Não consegui falar com o servidor. Ele ainda está aberto?</div>';
+  });
+}
+document.getElementById('btn-atualizar').addEventListener('click',carregar);
+carregar();
+setInterval(carregar,15000);
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+==========================================================
+  WHAT TIME IS IT?  -  circuito de provas do 4o ano
+  half past  /  quarter past  /  quarter to
+==========================================================
+
+COMO COMECAR A AULA
+-------------------
+1. De dois cliques no arquivo "INICIAR PROVA.bat".
+   Abre uma janela preta (o servidor) e o painel no navegador.
+   DEIXE A JANELA PRETA ABERTA ate o fim da aula.
+
+2. A janela preta mostra dois enderecos, por exemplo:
+
+      Neste computador:   http://localhost:8080
+      Para os alunos:     http://192.168.0.15:8080
+
+   O segundo e o que os alunos digitam no navegador
+   (celular, tablet ou outro computador ligado no MESMO wi-fi).
+   Se os alunos usarem ESTE computador, use o primeiro endereco.
+
+3. No fim da aula, feche a janela preta (ou aperte Ctrl + C).
+
+
+COMO E A PROVA
+--------------
+O aluno digita o NOME (obrigatorio) e a turma, e faz 34 questoes:
+
+  Fase 1 - Escolher   12 relogios sorteados, sempre 4 de cada tipo
+                      (4 half past, 4 quarter past, 4 quarter to),
+                      cada aluno recebe um sorteio diferente
+  Fase 2 - Montar      7 frases com os blocos embaralhados
+  Fase 3 - Escrever    7 frases digitadas
+  Fase 4 - Checar      8 frases para dizer se estao certas ou erradas
+  Resultado            nota por fase + lista do que errou, para estudar
+
+Os relogios sao desenhados com numeros de 1 a 12, ponteiro PEQUENO
+na hora e ponteiro GRANDE nos minutos (o pequeno anda junto, como
+em um relogio de verdade: half past three = 3:30).
+
+Na Fase 3 a correcao aceita MAIUSCULA/minuscula, espacos sobrando,
+ponto final, "It's a quarter past nine" e tambem "half past 3".
+So nao aceita a palavra escrita errada - e ai mostra a forma certa.
+
+
+ONDE FICAM AS NOTAS
+-------------------
+Pasta "resultados", um arquivo .json por aluno, com o nome dele.
+O progresso e salvo sozinho: a cada resposta, a cada 30 segundos e
+na hora em que o aluno fecha a aba. Se cair a energia ou o aluno
+fechar sem querer, ele digita o mesmo nome e o site pergunta se
+quer continuar de onde parou - com as mesmas perguntas.
+
+Painel da professora:  http://localhost:8080/painel
+  - lista todos os alunos, a fase em que estao e os acertos
+  - atualiza sozinho a cada 15 segundos (da para acompanhar ao vivo)
+  - botao "Baixar planilha (CSV)" abre no Excel com tudo
+
+Para zerar tudo antes de outra turma: apague os arquivos da pasta
+"resultados". Se um aluno so precisa refazer, apague o arquivo dele
+(ou peca para ele clicar em "Comecar tudo de novo").
+
+
+PROBLEMAS COMUNS
+----------------
+"A porta 8080 ja esta em uso"
+   Ja tem uma janela do servidor aberta. Use ela, ou feche e
+   comece de novo.
+
+Os alunos nao conseguem abrir o endereco
+   - Precisam estar no mesmo wi-fi que este computador.
+   - Na primeira vez, o Windows pode perguntar se libera o acesso
+     do Node.js na rede: escolha "Permitir" (rede privada).
+
+Um aluno digitou o nome errado
+   Renomeie o arquivo dele dentro da pasta "resultados", ou peca
+   para refazer com o nome certo.

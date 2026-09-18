@@ -1,0 +1,9 @@
+# Dados dos alunos NUNCA vao para o GitHub (nomes e notas de criancas)
+resultados/*.json
+resultados/*.tmp
+
+node_modules/
+*.log
+Thumbs.db
+desktop.ini
+.DS_Store

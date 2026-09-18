@@ -1,0 +1,191 @@
+:root{
+  --fundo:#eef4fb;
+  --fundo-2:#dce9f9;
+  --cartao:#ffffff;
+  --texto:#1d2b3a;
+  --texto-suave:#5b6e83;
+  --borda:#d5e1ee;
+  --azul:#2f6fd0;
+  --azul-escuro:#24559f;
+  --verde:#1e9e63;
+  --verde-claro:#e4f7ee;
+  --vermelho:#d2453c;
+  --vermelho-claro:#fde9e8;
+  --amarelo:#f4b740;
+  --sombra:0 10px 30px rgba(31,64,104,.12);
+  --raio:18px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+  color:var(--texto);
+  background:linear-gradient(160deg,var(--fundo) 0%,var(--fundo-2) 100%);
+  background-attachment:fixed;
+  -webkit-text-size-adjust:100%;
+}
+
+.tela{display:none;min-height:100%;padding:18px 16px 40px}
+.tela.ativa{display:block}
+
+.cartao{
+  background:var(--cartao);
+  border:1px solid var(--borda);
+  border-radius:var(--raio);
+  box-shadow:var(--sombra);
+  padding:24px;
+  max-width:720px;
+  margin:0 auto;
+}
+
+/* ---------- tela de início ---------- */
+.cartao-inicio{max-width:520px;margin-top:6vh;text-align:center}
+.relogio-capa{display:flex;justify-content:center;margin-bottom:6px}
+.relogio-capa svg{width:150px;height:150px}
+.cartao-inicio h1{margin:4px 0 2px;font-size:30px;letter-spacing:-.4px}
+.sub{margin:0 0 22px;color:var(--texto-suave);font-weight:600;font-size:15px}
+
+form{text-align:left}
+label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}
+.obrigatorio{color:var(--vermelho)}
+.opcional{font-weight:500;color:var(--texto-suave)}
+input[type=text]{
+  width:100%;padding:14px 16px;font-size:17px;font-family:inherit;color:inherit;
+  border:2px solid var(--borda);border-radius:12px;background:#fbfdff;
+}
+input[type=text]:focus{outline:none;border-color:var(--azul);background:#fff}
+.aviso{color:var(--vermelho);font-weight:700;font-size:14px;margin:10px 0 0}
+
+.botao{
+  display:inline-block;border:none;cursor:pointer;font-family:inherit;font-weight:700;
+  font-size:17px;padding:14px 22px;border-radius:12px;background:var(--azul);color:#fff;
+  box-shadow:0 4px 0 var(--azul-escuro);transition:transform .06s,box-shadow .06s;
+}
+.botao:hover{background:var(--azul-escuro)}
+.botao:active{transform:translateY(3px);box-shadow:0 1px 0 var(--azul-escuro)}
+.botao.grande{width:100%;margin-top:20px;font-size:19px;padding:16px}
+.botao.secundario{background:#eaf0f7;color:var(--texto);box-shadow:0 4px 0 #cdd9e6}
+.botao.secundario:hover{background:#dfe8f2}
+.botao[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none;transform:none}
+.linha-botoes{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.linha-botoes .botao{flex:1 1 180px;font-size:15px;padding:12px}
+
+.retomar{margin-top:20px;padding:16px;border-radius:14px;background:#fff8e8;border:1px solid #f0dcae;text-align:left}
+.retomar p{margin:0;font-weight:600}
+.rodape-inicio{margin:22px 0 0;font-size:13px;color:var(--texto-suave)}
+
+/* ---------- topo da prova ---------- */
+.topo{
+  max-width:720px;margin:0 auto 10px;display:flex;align-items:center;
+  justify-content:space-between;gap:12px;
+}
+.topo-esq,.topo-dir{display:flex;align-items:center;gap:10px}
+.etiqueta-fase{background:var(--azul);color:#fff;font-weight:800;font-size:13px;padding:6px 12px;border-radius:999px}
+.titulo-fase{font-weight:700;font-size:15px;color:var(--texto-suave)}
+.placar{font-weight:800;font-size:14px;color:var(--verde)}
+.botao-icone{border:none;background:#fff;border:1px solid var(--borda);border-radius:10px;width:38px;height:38px;font-size:17px;cursor:pointer}
+
+.barra{max-width:720px;margin:0 auto;height:12px;background:#fff;border:1px solid var(--borda);border-radius:999px;overflow:hidden}
+.barra-cheia{height:100%;width:0;background:linear-gradient(90deg,#4a9bff,#2f6fd0);border-radius:999px;transition:width .3s}
+.contador{max-width:720px;margin:8px auto 14px;font-size:13px;font-weight:600;color:var(--texto-suave);text-align:center}
+
+/* ---------- cartão da pergunta ---------- */
+.cartao-jogo{text-align:center;padding-top:18px}
+.enunciado{margin:0 0 14px;font-size:18px;font-weight:700}
+.enunciado .dica{display:block;font-size:13px;font-weight:600;color:var(--texto-suave);margin-top:4px}
+.palco-relogio{display:flex;justify-content:center;margin-bottom:18px}
+.palco-relogio svg{width:250px;height:250px;max-width:70vw}
+
+/* opções de múltipla escolha */
+.opcoes{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.opcao{
+  border:2px solid var(--borda);background:#fbfdff;border-radius:14px;padding:16px 12px;
+  font-family:inherit;font-size:18px;font-weight:700;cursor:pointer;color:var(--texto);
+}
+.opcao:hover:not([disabled]){border-color:var(--azul);background:#f2f8ff}
+.opcao.certa{border-color:var(--verde);background:var(--verde-claro);color:#146c45}
+.opcao.errada{border-color:var(--vermelho);background:var(--vermelho-claro);color:#9d2b24}
+.opcao[disabled]{cursor:default;opacity:1}
+
+/* blocos embaralhados */
+.linha-montagem{
+  min-height:70px;border:2px dashed var(--borda);border-radius:14px;background:#fbfdff;
+  display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;padding:12px;margin-bottom:16px;
+}
+.linha-montagem.vazia::after{content:"Toque nos blocos abaixo para montar a frase";color:var(--texto-suave);font-size:14px;font-weight:600}
+.banco{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;min-height:56px}
+.bloco{
+  border:2px solid var(--azul);background:#eaf3ff;color:var(--azul-escuro);border-radius:12px;
+  padding:12px 18px;font-family:inherit;font-size:19px;font-weight:800;cursor:pointer;
+}
+.bloco:hover:not([disabled]){background:#dbeaff}
+.bloco.usado{visibility:hidden}
+.bloco[disabled]{cursor:default}
+.linha-montagem .bloco{border-color:var(--amarelo);background:#fff6e3;color:#8a5f0d}
+.linha-montagem.certa .bloco{border-color:var(--verde);background:var(--verde-claro);color:#146c45}
+.linha-montagem.errada .bloco{border-color:var(--vermelho);background:var(--vermelho-claro);color:#9d2b24}
+
+/* digitação */
+.campo-escrita{
+  width:100%;padding:16px;font-size:22px;font-weight:700;text-align:center;font-family:inherit;
+  border:2px solid var(--borda);border-radius:14px;background:#fbfdff;color:inherit;
+}
+.campo-escrita:focus{outline:none;border-color:var(--azul);background:#fff}
+.campo-escrita.certa{border-color:var(--verde);background:var(--verde-claro)}
+.campo-escrita.errada{border-color:var(--vermelho);background:var(--vermelho-claro)}
+.ajuda-teclado{margin:10px 0 0;font-size:13px;color:var(--texto-suave);font-weight:600}
+
+/* checagem (certo / errado) */
+.frase-checagem{
+  font-size:26px;font-weight:800;padding:14px;border-radius:14px;background:#f5f9ff;
+  border:2px solid var(--borda);margin:0 0 18px;
+}
+.botoes-checagem{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.botao-check{
+  border:2px solid var(--borda);background:#fbfdff;border-radius:14px;padding:18px 10px;
+  font-family:inherit;font-size:18px;font-weight:800;cursor:pointer;color:var(--texto);
+}
+.botao-check .icone{display:block;font-size:30px;margin-bottom:4px}
+.botao-check.sim:hover:not([disabled]){border-color:var(--verde);background:var(--verde-claro)}
+.botao-check.nao:hover:not([disabled]){border-color:var(--vermelho);background:var(--vermelho-claro)}
+.botao-check.escolhido-certo{border-color:var(--verde);background:var(--verde-claro)}
+.botao-check.escolhido-errado{border-color:var(--vermelho);background:var(--vermelho-claro)}
+
+/* feedback */
+.feedback{margin-top:18px;padding:14px 16px;border-radius:14px;font-weight:700;font-size:17px;text-align:left}
+.feedback.certo{background:var(--verde-claro);color:#146c45;border:1px solid #b6e5cd}
+.feedback.errado{background:var(--vermelho-claro);color:#9d2b24;border:1px solid #f3c4c1}
+.feedback .resposta{display:block;margin-top:6px;font-size:20px}
+
+.rodape-jogo{max-width:720px;margin:16px auto 0;text-align:center}
+.rodape-jogo .botao{max-width:360px}
+.salvo{display:block;margin-top:10px;font-size:12px;color:var(--texto-suave);min-height:16px}
+
+/* ---------- intervalo e fim ---------- */
+.cartao-intervalo,.cartao-fim{max-width:560px;margin-top:5vh;text-align:center}
+.selo{font-size:60px;line-height:1}
+.cartao-intervalo h2,.cartao-fim h2{margin:8px 0 6px;font-size:26px}
+.nota-fase,.nota-final{font-size:19px;font-weight:800;color:var(--verde);margin:6px 0}
+.proxima{color:var(--texto-suave);font-weight:600;margin:14px 0 0}
+
+.grade-fases{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:18px 0 8px;text-align:left}
+.caixa-fase{border:1px solid var(--borda);border-radius:12px;padding:12px;background:#fbfdff}
+.caixa-fase b{display:block;font-size:13px;color:var(--texto-suave);text-transform:uppercase;letter-spacing:.3px}
+.caixa-fase span{font-size:20px;font-weight:800}
+
+.titulo-revisao{font-size:15px;color:var(--texto-suave);text-transform:uppercase;letter-spacing:.4px;margin:22px 0 8px}
+.lista-erros{text-align:left;display:grid;gap:8px}
+.erro-item{border:1px solid var(--borda);border-left:5px solid var(--vermelho);border-radius:10px;padding:10px 12px;background:#fff}
+.erro-item .voce{display:block;font-size:13px;color:var(--vermelho);font-weight:700}
+.erro-item .certo{display:block;font-size:17px;font-weight:800;color:#146c45}
+.sem-erros{background:var(--verde-claro);border:1px solid #b6e5cd;border-radius:12px;padding:14px;font-weight:700;color:#146c45;text-align:center}
+.rodape-fim{margin:22px 0 4px;font-size:14px;color:var(--texto-suave);font-weight:600}
+
+@media (max-width:520px){
+  .opcoes{grid-template-columns:1fr}
+  .cartao{padding:18px 14px}
+  .palco-relogio svg{width:210px;height:210px}
+  .grade-fases{grid-template-columns:1fr}
+}
