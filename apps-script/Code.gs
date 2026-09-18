@@ -104,6 +104,12 @@ function contaFase(p, chave) {
   return { feitas: feitas, certas: certas };
 }
 
+function respondidas(p) {
+  var n = 0;
+  for (var i = 0; i < FASES.length; i++) n += contaFase(p, FASES[i]).feitas;
+  return n;
+}
+
 function resumo(p) {
   var c = {}, total = 0;
   for (var i = 0; i < FASES.length; i++) {
@@ -155,6 +161,16 @@ function salvarProgresso(p) {
       try { anterior = JSON.parse(prog.getRange(linhaProg, 4).getValue()); } catch (e) {}
     }
     if (anterior && anterior.inicio && !p.inicio) p.inicio = anterior.inicio;
+
+    /* Salvamento atrasado da MESMA tentativa nao pode apagar respostas que
+       ja chegaram: o front-end manda o estado inteiro, entao um POST fora de
+       ordem faria o aluno "voltar no tempo". Tentativa nova (o aluno clicou
+       em "comecar tudo de novo") tem outro inicio e passa direto.          */
+    if (anterior && texto(anterior.inicio) === texto(p.inicio)
+        && respondidas(p) < respondidas(anterior)) {
+      return { ok: true, ignorado: 'chegou fora de ordem', id: id };
+    }
+
     p.atualizado = new Date().toISOString();
 
     var json = JSON.stringify(p);

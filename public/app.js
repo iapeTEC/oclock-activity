@@ -244,6 +244,8 @@ function urlApi(parametros) {
 }
 
 let salvandoTimer = null;
+let salvandoAgora = false;    // ja tem um POST no ar
+let salvarDeNovo  = false;    // chegou pedido novo enquanto salvava
 
 function marcarSalvo(ok) {
   const el = $('salvo');
@@ -254,10 +256,25 @@ function marcarSalvo(ok) {
   el.style.color = ok ? '' : '#d2453c';
 }
 
+/* Um salvamento por vez. Se chegar outro pedido enquanto o primeiro esta no
+   ar, ele nao entra na fila: fica so a marca de "salvar de novo", e no fim o
+   estado mais novo e enviado uma unica vez. Isso evita dois POSTs cruzados
+   (o mais antigo chegando depois e apagando respostas mais novas) e alivia a
+   planilha quando a turma inteira salva junto.                              */
 function salvar() {
   if (!estado) return Promise.resolve();
+  if (salvandoAgora) { salvarDeNovo = true; return Promise.resolve(); }
+
+  salvandoAgora = true;
   estado.atualizado = new Date().toISOString();
   try { localStorage.setItem('prova-relogios', JSON.stringify(estado)); } catch (e) {}
+
+  function acabou(ok) {
+    marcarSalvo(ok);
+    salvandoAgora = false;
+    if (salvarDeNovo) { salvarDeNovo = false; salvar(); }
+  }
+
   /* text/plain de proposito: evita o pedido de permissao (preflight) que o
      Apps Script nao responde. O conteudo continua sendo JSON.              */
   return fetch(API, {
@@ -267,8 +284,8 @@ function salvar() {
     redirect: 'follow'
   })
     .then(function (r) { return r.ok ? r.json() : { erro: 'http ' + r.status }; })
-    .then(function (d) { marcarSalvo(!!(d && d.ok)); })
-    .catch(function () { marcarSalvo(false); });
+    .then(function (d) { acabou(!!(d && d.ok)); })
+    .catch(function () { acabou(false); });
 }
 
 function salvarEmBreve() {
