@@ -229,13 +229,27 @@ function novoEstado(nome, turma) {
 }
 
 /* ------------------------------------------------- salvar automaticamente */
+/* Backend: web app do Apps Script (planilha) quando CONFIG.API esta preenchido;
+   senao, o servidor local (node server.js). Os dois falam a mesma linguagem:
+   GET  ?acao=progresso&nome=...   ->  { encontrado, progresso }
+   POST corpo = estado em JSON     ->  { ok: true }                            */
+var API = (window.CONFIG && window.CONFIG.API) || '/api';
+
+function urlApi(parametros) {
+  var partes = [];
+  Object.keys(parametros).forEach(function (k) {
+    partes.push(encodeURIComponent(k) + '=' + encodeURIComponent(parametros[k]));
+  });
+  return API + (API.indexOf('?') >= 0 ? '&' : '?') + partes.join('&');
+}
+
 let salvandoTimer = null;
 
 function marcarSalvo(ok) {
   const el = $('salvo');
   if (!el) return;
-  el.textContent = ok ? '✔ progresso salvo no computador da professora'
-                      : '⚠ não consegui salvar agora — avise a professora';
+  el.textContent = ok ? '\u2714 progresso salvo na planilha da professora'
+                      : '\u26a0 n\u00e3o consegui salvar agora \u2014 avise a professora';
   el.style.color = ok ? '' : '#d2453c';
 }
 
@@ -243,11 +257,17 @@ function salvar() {
   if (!estado) return Promise.resolve();
   estado.atualizado = new Date().toISOString();
   try { localStorage.setItem('prova-relogios', JSON.stringify(estado)); } catch (e) {}
-  return fetch('/api/progresso', {
+  /* text/plain de proposito: evita o pedido de permissao (preflight) que o
+     Apps Script nao responde. O conteudo continua sendo JSON.              */
+  return fetch(API, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(estado)
-  }).then((r) => marcarSalvo(r.ok)).catch(() => marcarSalvo(false));
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(estado),
+    redirect: 'follow'
+  })
+    .then(function (r) { return r.ok ? r.json() : { erro: 'http ' + r.status }; })
+    .then(function (d) { marcarSalvo(!!(d && d.ok)); })
+    .catch(function () { marcarSalvo(false); });
 }
 
 function salvarEmBreve() {
@@ -255,20 +275,20 @@ function salvarEmBreve() {
   salvandoTimer = setTimeout(salvar, 300);
 }
 
-/* salva na hora em que a aba é fechada / trocada / o computador é desligado */
+/* salva na hora em que a aba e fechada / trocada / o computador e desligado */
 function salvarAoSair() {
   if (!estado) return;
   estado.atualizado = new Date().toISOString();
   const corpo = JSON.stringify(estado);
   try { localStorage.setItem('prova-relogios', corpo); } catch (e) {}
   try {
-    const enviado = navigator.sendBeacon('/api/progresso',
-      new Blob([corpo], { type: 'application/json' }));
+    const enviado = navigator.sendBeacon(API,
+      new Blob([corpo], { type: 'text/plain;charset=utf-8' }));
     if (!enviado) throw new Error('beacon recusado');
   } catch (e) {
     try {
-      fetch('/api/progresso', { method: 'POST', body: corpo, keepalive: true,
-        headers: { 'Content-Type': 'application/json' } });
+      fetch(API, { method: 'POST', body: corpo, keepalive: true,
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
     } catch (e2) {}
   }
 }
@@ -296,7 +316,7 @@ $('form-nome').addEventListener('submit', (ev) => {
   }
   $('aviso-nome').hidden = true;
 
-  fetch('/api/progresso?nome=' + encodeURIComponent(nome))
+  fetch(urlApi({ acao: 'progresso', nome: nome }), { redirect: 'follow' })
     .then((r) => r.json())
     .then((dados) => {
       if (dados.encontrado && dados.progresso && dados.progresso.perguntas) {

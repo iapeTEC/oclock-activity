@@ -102,10 +102,48 @@ function csvDaTurma() {
   return '﻿' + [cab].concat(linhas).join('\r\n');
 }
 
+/* --- gravacao do progresso ------------------------------------------------ */
+function gravar(corpo) {
+  corpo.atualizado = new Date().toISOString();
+  const destino  = arquivoDe(corpo.nome);
+  const anterior = lerJSON(destino);
+  if (anterior && anterior.inicio && !corpo.inicio) corpo.inicio = anterior.inicio;
+  try {
+    const tmp = destino + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(corpo, null, 2), 'utf8');
+    fs.renameSync(tmp, destino);                         // gravacao atomica
+    return { ok: true, arquivo: path.basename(destino) };
+  } catch (e) {
+    return { erro: String(e.message) };
+  }
+}
+
 /* --- servidor ------------------------------------------------------------- */
 const servidor = http.createServer(async (req, res) => {
   const url  = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));
   const rota = decodeURIComponent(url.pathname);
+
+  /* rota unica /api: mesma linguagem do web app do Apps Script, para o
+     front-end ter um so caminho de codigo (?acao=... e POST com o estado) */
+  if (rota === '/api') {
+    const acao = url.searchParams.get('acao') || '';
+    if (req.method === 'POST') {
+      const corpo = await lerCorpo(req);
+      return enviarJSON(res, corpo && corpo.nome ? 200 : 400,
+        corpo && corpo.nome ? gravar(corpo) : { erro: 'nome obrigatorio' });
+    }
+    if (acao === 'progresso') {
+      const dados = lerJSON(arquivoDe(url.searchParams.get('nome')));
+      return enviarJSON(res, 200, { encontrado: !!dados, progresso: dados });
+    }
+    if (acao === 'turma') {
+      return enviarJSON(res, 200, { alunos: todosOsAlunos() });
+    }
+    if (acao === 'ping' || !acao) {
+      return enviarJSON(res, 200, { ok: true, servico: 'prova-horas', modo: 'local' });
+    }
+    return enviarJSON(res, 400, { erro: 'acao desconhecida: ' + acao });
+  }
 
   // progresso salvo de um aluno
   if (rota === '/api/progresso' && req.method === 'GET') {
@@ -119,18 +157,7 @@ const servidor = http.createServer(async (req, res) => {
     if (!corpo || !corpo.nome || !String(corpo.nome).trim()) {
       return enviarJSON(res, 400, { erro: 'nome obrigatorio' });
     }
-    corpo.atualizado = new Date().toISOString();
-    const destino  = arquivoDe(corpo.nome);
-    const anterior = lerJSON(destino);
-    if (anterior && anterior.inicio && !corpo.inicio) corpo.inicio = anterior.inicio;
-    try {
-      const tmp = destino + '.tmp';
-      fs.writeFileSync(tmp, JSON.stringify(corpo, null, 2), 'utf8');
-      fs.renameSync(tmp, destino);                       // gravacao atomica
-      return enviarJSON(res, 200, { ok: true, arquivo: path.basename(destino) });
-    } catch (e) {
-      return enviarJSON(res, 500, { erro: String(e.message) });
-    }
+    return enviarJSON(res, 200, gravar(corpo));
   }
 
   if (rota === '/api/turma' && req.method === 'GET') {

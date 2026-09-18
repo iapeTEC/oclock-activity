@@ -27,56 +27,134 @@
 <section class="tela ativa">
   <div class="painel">
     <h1>Painel da professora</h1>
-    <p class="sub">Resultados salvos nesta máquina, na pasta <b>resultados</b>.</p>
+    <p class="sub">Resultados salvos na sua planilha do Google Sheets.</p>
 
-    <div class="acoes">
+    <form id="form-senha" class="acoes" autocomplete="off">
+      <input id="campo-senha" type="password" placeholder="senha do painel"
+             style="padding:10px 12px;border:1px solid var(--borda);border-radius:10px;font-size:15px">
+      <button class="botao" type="submit">Entrar</button>
+      <span id="aviso-senha" style="font-size:13px;color:#d2453c"></span>
+    </form>
+
+    <div class="acoes" id="acoes" hidden>
       <button class="botao" id="btn-atualizar" type="button">↻ Atualizar</button>
-      <a class="botao secundario" href="/api/turma.csv" style="text-decoration:none">⬇ Baixar planilha (CSV)</a>
+      <button class="botao secundario" id="btn-csv" type="button">⬇ Baixar CSV</button>
+      <a class="botao secundario" id="link-planilha" href="#" target="_blank" rel="noopener"
+         style="text-decoration:none" hidden>📊 Abrir a planilha</a>
+      <button class="botao secundario" id="btn-sair" type="button">Sair</button>
       <span id="carimbo" style="font-size:13px;color:var(--texto-suave)"></span>
     </div>
 
     <div id="conteudo"></div>
-    <p class="legenda">Atualiza sozinho a cada 15 segundos. Cada fase mostra <b>acertos / respondidas</b>.</p>
+    <p class="legenda">Atualiza sozinho a cada 20 segundos. Cada fase mostra <b>acertos / respondidas</b>.</p>
   </div>
 </section>
 
+<script src="config.js"></script>
 <script>
-function escapar(t){return String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function hora(iso){ if(!iso) return '—'; const d=new Date(iso);
+var API = (window.CONFIG && window.CONFIG.API) || '/api';
+var CHAVE_LOCAL = 'painel-horas-senha';
+var senha = '';
+var timer = null;
+var ultimos = [];
+
+function $(id){ return document.getElementById(id); }
+function escapar(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];});}
+function hora(iso){ if(!iso) return '—'; var d=new Date(iso);
   return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
-function celula(f){ return f.feitas ? f.certas+' / '+f.feitas : '—'; }
+function celula(f){ return f && f.feitas ? f.certas+' / '+f.feitas : '—'; }
+function urlApi(p){ var q=Object.keys(p).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(p[k]);}).join('&');
+  return API + (API.indexOf('?')>=0?'&':'?') + q; }
+
+function desenhar(alunos){
+  ultimos = alunos;
+  $('carimbo').textContent='última leitura: '+new Date().toLocaleTimeString('pt-BR');
+  if(!alunos.length){
+    $('conteudo').innerHTML='<div class="vazio">Nenhum aluno começou a prova ainda.</div>';
+    return;
+  }
+  var linhas=alunos.map(function(a){
+    var pct=a.totalQuestoes?Math.round(a.total/a.totalQuestoes*100):0;
+    return '<tr>'+
+      '<td class="nome">'+escapar(a.nome)+'</td>'+
+      '<td>'+escapar(a.turma)+'</td>'+
+      '<td>'+(a.concluido?'<span class="tag ok">terminou</span>':'<span class="tag andando">fase '+escapar(a.faseAtual)+'</span>')+'</td>'+
+      '<td>'+celula(a.f1)+'</td><td>'+celula(a.f2)+'</td><td>'+celula(a.f3)+'</td><td>'+celula(a.f4)+'</td>'+
+      '<td class="nota">'+a.total+' / '+a.totalQuestoes+(a.concluido?' ('+pct+'%)':'')+'</td>'+
+      '<td>'+a.tempoMin+' min</td>'+
+      '<td>'+hora(a.atualizado)+'</td>'+
+    '</tr>';
+  }).join('');
+  $('conteudo').innerHTML=
+    '<table><thead><tr><th>Aluno</th><th>Turma</th><th>Situação</th>'+
+    '<th>Fase 1<br>escolher</th><th>Fase 2<br>montar</th><th>Fase 3<br>escrever</th><th>Fase 4<br>checar</th>'+
+    '<th>Total</th><th>Tempo</th><th>Atualizado</th></tr></thead><tbody>'+linhas+'</tbody></table>';
+}
 
 function carregar(){
-  fetch('/api/turma').then(r=>r.json()).then(d=>{
-    const alunos=d.alunos||[];
-    document.getElementById('carimbo').textContent='última leitura: '+new Date().toLocaleTimeString('pt-BR');
-    if(!alunos.length){
-      document.getElementById('conteudo').innerHTML='<div class="vazio">Nenhum aluno começou a prova ainda.</div>';
-      return;
-    }
-    const linhas=alunos.map(a=>{
-      const pct=a.totalQuestoes?Math.round(a.total/a.totalQuestoes*100):0;
-      return '<tr>'+
-        '<td class="nome">'+escapar(a.nome)+'</td>'+
-        '<td>'+escapar(a.turma)+'</td>'+
-        '<td>'+(a.concluido?'<span class="tag ok">terminou</span>':'<span class="tag andando">fase '+escapar(a.faseAtual)+'</span>')+'</td>'+
-        '<td>'+celula(a.f1)+'</td><td>'+celula(a.f2)+'</td><td>'+celula(a.f3)+'</td><td>'+celula(a.f4)+'</td>'+
-        '<td class="nota">'+a.total+' / '+a.totalQuestoes+(a.concluido?' ('+pct+'%)':'')+'</td>'+
-        '<td>'+a.tempoMin+' min</td>'+
-        '<td>'+hora(a.atualizado)+'</td>'+
-      '</tr>';
-    }).join('');
-    document.getElementById('conteudo').innerHTML=
-      '<table><thead><tr><th>Aluno</th><th>Turma</th><th>Situação</th>'+
-      '<th>Fase 1<br>escolher</th><th>Fase 2<br>montar</th><th>Fase 3<br>escrever</th><th>Fase 4<br>checar</th>'+
-      '<th>Total</th><th>Tempo</th><th>Atualizado</th></tr></thead><tbody>'+linhas+'</tbody></table>';
-  }).catch(()=>{
-    document.getElementById('conteudo').innerHTML='<div class="vazio">Não consegui falar com o servidor. Ele ainda está aberto?</div>';
-  });
+  fetch(urlApi({acao:'turma', chave:senha}),{redirect:'follow'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.erro){ sair(d.erro); return; }
+      if(d.planilha){ $('link-planilha').href=d.planilha; $('link-planilha').hidden=false; }
+      desenhar(d.alunos||[]);
+    })
+    .catch(function(){
+      $('conteudo').innerHTML='<div class="vazio">Não consegui falar com a planilha. Confira a internet.</div>';
+    });
 }
-document.getElementById('btn-atualizar').addEventListener('click',carregar);
-carregar();
-setInterval(carregar,15000);
+
+function entrar(nova){
+  senha = nova;
+  try { localStorage.setItem(CHAVE_LOCAL, nova); } catch(e){}
+  $('form-senha').hidden = true;
+  $('acoes').hidden = false;
+  $('aviso-senha').textContent = '';
+  carregar();
+  clearInterval(timer);
+  timer = setInterval(carregar, 20000);
+}
+
+function sair(aviso){
+  clearInterval(timer);
+  senha = '';
+  try { localStorage.removeItem(CHAVE_LOCAL); } catch(e){}
+  $('form-senha').hidden = false;
+  $('acoes').hidden = true;
+  $('conteudo').innerHTML = '';
+  $('aviso-senha').textContent = aviso || '';
+  $('campo-senha').value = '';
+  $('campo-senha').focus();
+}
+
+function baixarCsv(){
+  var cab=['Nome','Turma','Fase','Concluido','Fase1','Fase2','Fase3','Fase4','Acertos','Questoes','Tempo (min)','Inicio','Atualizado'];
+  var par=function(f){ return f && f.feitas ? f.certas+'/'+f.feitas : ''; };
+  var linhas=ultimos.map(function(a){ return [
+    a.nome,a.turma,a.faseAtual,a.concluido?'sim':'nao',
+    par(a.f1),par(a.f2),par(a.f3),par(a.f4),
+    a.total,a.totalQuestoes,a.tempoMin,a.inicio,a.atualizado
+  ].map(function(c){ return String(c==null?'':c).replace(/;/g,','); }).join(';'); });
+  var texto='\ufeff'+[cab.join(';')].concat(linhas).join('\r\n');
+  var url=URL.createObjectURL(new Blob([texto],{type:'text/csv;charset=utf-8'}));
+  var a=document.createElement('a');
+  a.href=url; a.download='turma.csv'; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); },2000);
+}
+
+$('form-senha').addEventListener('submit',function(ev){
+  ev.preventDefault();
+  var valor=$('campo-senha').value.trim();
+  if(!valor){ $('aviso-senha').textContent='digite a senha'; return; }
+  entrar(valor);
+});
+$('btn-atualizar').addEventListener('click',carregar);
+$('btn-csv').addEventListener('click',baixarCsv);
+$('btn-sair').addEventListener('click',function(){ sair(''); });
+
+var guardada='';
+try { guardada=localStorage.getItem(CHAVE_LOCAL)||''; } catch(e){}
+if(guardada) entrar(guardada); else $('campo-senha').focus();
 </script>
 </body>
 </html>
