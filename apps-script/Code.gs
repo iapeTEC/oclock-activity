@@ -175,6 +175,14 @@ function salvarProgresso(p) {
       return { ok: true, ignorado: 'chegou fora de ordem', id: id };
     }
 
+    /* Prova em branco nao apaga respostas ja salvas. Acontece quando o aluno
+       digita o nome e a leitura do progresso nao volta (internet ruim): o site
+       comecaria uma prova nova e o primeiro salvamento levaria o que ele fez.
+       Refazer de proposito ("comecar tudo de novo") vem marcado e passa.    */
+    if (anterior && !p.refazendo && respondidas(p) === 0 && respondidas(anterior) > 0) {
+      return { ok: true, ignorado: 'prova em branco nao apaga o que ja existe', id: id };
+    }
+
     p.atualizado = new Date().toISOString();
 
     var json = JSON.stringify(p);

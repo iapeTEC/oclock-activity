@@ -210,11 +210,15 @@ function mostrarTela(id) {
   window.scrollTo(0, 0);
 }
 
-function novoEstado(nome, turma) {
+function novoEstado(nome, turma, refazendo) {
   const perguntas = gerarProva();
   return {
     versao: 1,
     nome: nome, turma: turma,
+    /* so vem marcado quando o aluno clica em "comecar tudo de novo": o
+       backend usa isso para nao deixar uma prova em branco apagar
+       respostas que ja estao na planilha                                   */
+    refazendo: !!refazendo,
     inicio: new Date().toISOString(),
     atualizado: new Date().toISOString(),
     fase: 1, indice: 0, concluido: false,
@@ -366,8 +370,34 @@ $('form-nome').addEventListener('submit', (ev) => {
         comecar(novoEstado(nome, turma));
       }
     })
-    .catch(() => comecar(novoEstado(nome, turma)));
+    .catch(() => {
+      /* backend fora do ar ou demorando: a copia local deste computador vale
+         mais do que uma prova em branco, que apagaria o que ja foi salvo   */
+      const local = copiaLocal(nome);
+      if (local) {
+        pendente = local;
+        pendente.turma = turma || pendente.turma;
+        const feitas = ['f1','f2','f3','f4'].reduce((a, k) => a + (local.respostas[k] || []).filter(Boolean).length, 0);
+        $('texto-retomar').textContent = 'Olá de novo, ' + local.nome +
+          '! Achei ' + feitas + ' perguntas guardadas neste computador.';
+        $('btn-continuar').textContent = local.concluido ? 'Ver o meu resultado' : 'Continuar de onde parei';
+        $('caixa-retomar').hidden = false;
+        $('form-nome').hidden = true;
+        return;
+      }
+      comecar(novoEstado(nome, turma));
+    });
 });
+
+/* progresso guardado neste navegador, se for do mesmo aluno */
+function copiaLocal(nome) {
+  try {
+    const guardado = JSON.parse(localStorage.getItem('prova-relogios') || 'null');
+    if (!guardado || !guardado.perguntas) return null;
+    const mesmo = String(guardado.nome || '').trim().toLowerCase() === String(nome).trim().toLowerCase();
+    return mesmo ? guardado : null;
+  } catch (e) { return null; }
+}
 
 $('btn-continuar').addEventListener('click', () => {
   if (!pendente) return;
@@ -379,7 +409,7 @@ $('btn-continuar').addEventListener('click', () => {
 $('btn-recomecar').addEventListener('click', () => {
   const nome  = $('campo-nome').value.trim().replace(/\s+/g, ' ');
   const turma = $('campo-turma').value.trim() || (pendente && pendente.turma) || '';
-  comecar(novoEstado(nome, turma));
+  comecar(novoEstado(nome, turma, true));
 });
 
 function comecar(novo) {
